@@ -12,28 +12,26 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; }
         
-        /* Исправление высоты и черной полоски для iOS */
-        html, body {
-            background-color: #000000; 
-            height: 100vh;
-            height: -webkit-fill-available;
-        }
-        
         body { 
+            background-color: #000000; 
             color: #FFFFFF; 
             display: flex; 
             flex-direction: column; 
+            height: 100vh;
+            height: 100dvh; 
             overflow: hidden; 
             user-select: none; 
             -webkit-user-select: none; 
             -webkit-tap-highlight-color: transparent;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
         }
         
         /* === ВЕРХНЯЯ ЗОНА === */
         #top-container {
             height: 35vh; 
             min-height: 250px;
-            padding: calc(16px + env(safe-area-inset-top)) 20px 16px 20px;
+            padding: 16px 20px;
             display: flex;
             align-items: stretch;
             flex-shrink: 0; 
@@ -83,21 +81,23 @@
 
         /* === НИЖНЯЯ ЗОНА === */
         #bottom-zone { 
-            flex: 1; 
+            flex: 1 1 0%; /* Исправлено для Apple Safari, чтобы блок не схлопывался */
             display: flex; 
             flex-direction: column; 
-            /* Вшиваем зону Home Indicator прямо в отступ клавиатуры */
-            padding: 0 24px calc(20px + env(safe-area-inset-bottom)) 24px;
+            padding: 0 24px 20px 24px;
             overflow: hidden; 
         }
         
+        /* Лента памяти */
         #history-list { 
-            flex: 1; 
+            flex: 1 1 0%; 
             overflow-y: auto; 
             margin-bottom: 12px; 
             display: flex;
             flex-direction: column;
             gap: 12px;
+            
+            /* Скрываем ползунок скролла */
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
@@ -128,6 +128,7 @@
         }
         .delete-btn:active { background: rgba(255, 69, 58, 0.4); transform: scale(0.9); }
         
+        /* Дисплей ввода */
         #display { 
             font-size: 56px; 
             font-weight: 300; 
@@ -138,191 +139,8 @@
             flex-shrink: 0; 
         }
         
+        /* Клавиатура */
         #numpad { 
             display: grid; 
             grid-template-columns: repeat(3, 1fr); 
-            gap: 12px; 
-            justify-items: center; 
-            flex-shrink: 0; 
-        }
-        
-        .key { 
-            background: #333333; 
-            border: none; 
-            width: 100%;
-            aspect-ratio: 1 / 1; 
-            max-width: 80px; 
-            border-radius: 50%; 
-            color: #FFFFFF; 
-            font-size: 34px; 
-            font-weight: 400; 
-            display: flex; justify-content: center; align-items: center;
-            cursor: pointer; transition: filter 0.1s, transform 0.1s;
-        }
-        
-        .key:active { filter: brightness(1.6); transform: scale(0.9); } 
-        
-        .key.cmd-c { color: #FF453A; font-weight: 500; background: rgba(255, 69, 58, 0.15); }
-        .key.cmd-ok { background: #32D74B; color: #000000; font-weight: 600; box-shadow: 0 0 20px rgba(50, 215, 75, 0.3); }
-        .key.cmd-ok:active { filter: brightness(1.2); }
-
-    </style>
-</head>
-<body>
-
-    <div id="top-container">
-        <div id="roll-zone" class="theme-1">
-            <div id="roll-number">1</div>
-            <div id="roll-label">РУЛОН</div>
-        </div>
-    </div>
-
-    <div id="bottom-zone">
-        <div id="history-list"></div>
-        <div id="display">_</div>
-        <div id="numpad">
-            <button class="key">1</button><button class="key">2</button><button class="key">3</button>
-            <button class="key">4</button><button class="key">5</button><button class="key">6</button>
-            <button class="key">7</button><button class="key">8</button><button class="key">9</button>
-            <button class="key cmd-c">C</button><button class="key">0</button><button class="key cmd-ok">OK</button>
-        </div>
-    </div>
-
-    <script>
-        let currentRoll = parseInt(localStorage.getItem('roll')) || 1;
-        let metersHistory = JSON.parse(localStorage.getItem('meters')) || [];
-        let currentInput = "";
-        let wakeLock = null;
-
-        const rollZone = document.getElementById('roll-zone');
-        const rollNumEl = document.getElementById('roll-number');
-        const rollLabelEl = document.getElementById('roll-label');
-        const displayEl = document.getElementById('display');
-        const historyEl = document.getElementById('history-list');
-
-        const trashIcon = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>`;
-
-        async function requestWakeLock() {
-            if ('wakeLock' in navigator) {
-                try {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                } catch (err) {}
-            }
-        }
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') requestWakeLock();
-        });
-
-        function updateRollUI() {
-            rollNumEl.innerText = currentRoll;
-            rollZone.className = '';
-            rollZone.classList.add(`theme-${currentRoll}`);
-            
-            if (currentRoll === 4) {
-                rollLabelEl.innerText = "ИНСПЕКЦИЯ";
-                rollZone.classList.add('pulse-alert');
-            } else {
-                rollLabelEl.innerText = "РУЛОН";
-            }
-            localStorage.setItem('roll', currentRoll);
-        }
-
-        function renderHistory() {
-            historyEl.innerHTML = '';
-            metersHistory.forEach((val, index) => {
-                const item = document.createElement('div');
-                item.className = 'history-item';
-                item.innerHTML = `
-                    <span class="history-value">${val} м</span>
-                    <button class="delete-btn" onclick="deleteItem(${index})">${trashIcon}</button>
-                `;
-                historyEl.appendChild(item);
-            });
-            historyEl.scrollTo({ top: historyEl.scrollHeight, behavior: 'smooth' });
-            localStorage.setItem('meters', JSON.stringify(metersHistory));
-        }
-
-        window.deleteItem = function(index) {
-            metersHistory.splice(index, 1);
-            renderHistory();
-        };
-
-        // Обработчик счетчика рулонов
-        let pressTimer;
-        let isLongPress = false;
-
-        function handlePressStart(e) {
-            if (e.type === 'touchstart') e.preventDefault(); 
-            requestWakeLock();
-            isLongPress = false;
-            rollZone.classList.add('pressing'); 
-            
-            pressTimer = setTimeout(() => {
-                isLongPress = true;
-                currentRoll = 1;
-                updateRollUI();
-                rollZone.classList.remove('pressing');
-            }, 1000); 
-        }
-
-        function handlePressEnd(e) {
-            if (e.type === 'touchend') e.preventDefault();
-            clearTimeout(pressTimer);
-            rollZone.classList.remove('pressing');
-            
-            if (!isLongPress) {
-                currentRoll = currentRoll < 4 ? currentRoll + 1 : 1;
-                updateRollUI();
-            }
-        }
-
-        function handlePressCancel() {
-            clearTimeout(pressTimer);
-            rollZone.classList.remove('pressing');
-        }
-
-        rollZone.addEventListener('mousedown', handlePressStart);
-        rollZone.addEventListener('touchstart', handlePressStart, { passive: false });
-        rollZone.addEventListener('mouseup', handlePressEnd);
-        rollZone.addEventListener('touchend', handlePressEnd, { passive: false });
-        rollZone.addEventListener('mouseleave', handlePressCancel);
-        rollZone.addEventListener('touchcancel', handlePressCancel);
-
-        // Универсальный и надежный обработчик клавиатуры
-        function handleNumpadPress(val) {
-            requestWakeLock();
-            if (val === 'C') {
-                currentInput = "";
-            } else if (val === 'OK') {
-                if (currentInput !== "") {
-                    metersHistory.push(currentInput); 
-                    currentInput = "";
-                    renderHistory();
-                }
-            } else {
-                if (currentInput.length < 5) currentInput += val;
-            }
-            displayEl.innerText = currentInput === "" ? "_" : currentInput;
-        }
-
-        document.querySelectorAll('.key').forEach(btn => {
-            // Для мгновенного срабатывания на iPhone
-            btn.addEventListener('touchstart', (e) => {
-                e.preventDefault(); 
-                handleNumpadPress(e.currentTarget.textContent.trim());
-            }, { passive: false });
-            
-            // Для работы на ПК
-            btn.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                handleNumpadPress(e.currentTarget.textContent.trim());
-            });
-        });
-
-        // Запуск
-        updateRollUI();
-        renderHistory();
-        requestWakeLock();
-    </script>
-</body>
-</html>
+            gap: 1
