@@ -10,33 +10,37 @@
     <meta name="theme-color" content="#000000">
 
     <style>
+        /* БЛОКИРОВКА ЗУМА ПРИ МИСКЛИКАХ */
+        * { 
+            box-sizing: border-box; margin: 0; padding: 0; 
+            font-family: -apple-system, sans-serif; 
+            touch-action: manipulation; /* Отрубает зум по двойному тапу */
+        }
+        
         body { 
             margin: 0; padding: 0; 
             background: #000; color: #fff; 
-            font-family: -apple-system, sans-serif; 
             position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
             display: flex; flex-direction: column; 
             user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+            overscroll-behavior: none; /* Отрубает "резиновое" растягивание экрана */
         }
         
-        /* БОКОВОЕ МЕНЮ И ЗАТЕМНЕНИЕ */
-        #overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 100; display: none; opacity: 0; transition: opacity 0.3s; }
-        #side-menu { position: fixed; top: 0; left: -280px; bottom: 0; width: 280px; background: #111; z-index: 101; transition: left 0.3s cubic-bezier(0.25, 1, 0.5, 1); display: flex; flex-direction: column; padding-top: calc(env(safe-area-inset-top) + 20px); box-shadow: 5px 0 20px rgba(0,0,0,0.5); }
+        #overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 100; display: none; opacity: 0; transition: opacity 0.3s; touch-action: none; }
+        #side-menu { position: fixed; top: 0; left: -280px; bottom: 0; width: 280px; background: #111; z-index: 101; transition: left 0.3s cubic-bezier(0.25, 1, 0.5, 1); display: flex; flex-direction: column; padding-top: calc(env(safe-area-inset-top) + 20px); box-shadow: 5px 0 20px rgba(0,0,0,0.5); touch-action: none; }
         
         .menu-item { padding: 20px 25px; font-size: 24px; font-weight: bold; border-bottom: 1px solid #222; cursor: pointer; color: #aaa; }
         .menu-item.active { color: #fff; background: #222; border-left: 5px solid #007AFF; }
         .menu-item:active { background: #333; }
 
-        /* КНОПКА МЕНЮ (Гамбургер) */
         #menu-btn { position: absolute; top: calc(env(safe-area-inset-top) + 15px); left: 15px; z-index: 99; background: rgba(255,255,255,0.15); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; backdrop-filter: blur(10px); }
         #menu-btn:active { background: rgba(255,255,255,0.3); transform: scale(0.9); }
 
-        /* ВКЛАДКИ */
         .tab-view { flex: 1; display: none; flex-direction: column; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); overflow: hidden; }
         .tab-view.active { display: flex; }
 
-        /* ==================== ВКЛАДКА 1: ГЛАВНАЯ ==================== */
-        #top-zone { flex: 0 0 28%; display: flex; padding: 15px 20px 15px 70px; box-sizing: border-box; } /* Отступ слева под гамбургер */
+        /* ==================== ВКЛАДКА 1 ==================== */
+        #top-zone { flex: 0 0 28%; display: flex; padding: 15px 20px 15px 70px; box-sizing: border-box; touch-action: none; }
         
         #roll-btn { 
             flex: 1; border-radius: 30px; 
@@ -52,7 +56,7 @@
         
         #bot-zone { flex: 1; display: flex; flex-direction: column; padding: 0 20px 20px 20px; box-sizing: border-box; overflow: hidden; }
         
-        #history { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; min-height: 100px; -ms-overflow-style: none; scrollbar-width: none; }
+        #history { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; min-height: 100px; -ms-overflow-style: none; scrollbar-width: none; overscroll-behavior: contain; }
         #history::-webkit-scrollbar { display: none; }
         
         .itm { background: #222; padding: 12px 16px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; font-size: 22px; font-weight: bold; border: 1px solid #333; }
@@ -61,14 +65,11 @@
         
         #display { font-size: 44px; text-align: right; color: #fff; min-height: 54px; margin-bottom: 15px; font-weight: 300; }
         
-        /* Увеличенная клавиатура */
         #keyboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; justify-items: center; align-self: center; width: 100%; max-width: 290px; flex-shrink: 0; }
         
         .key { 
             background: #333; color: #fff; border: none; 
-            width: 75px; height: 75px; /* Увеличил кнопки */
-            border-radius: 40px; 
-            font-size: 28px; 
+            width: 75px; height: 75px; border-radius: 40px; font-size: 28px; 
             cursor: pointer; display: flex; align-items: center; justify-content: center; 
         }
         .key:active { background: #666; transform: scale(0.9); }
@@ -77,21 +78,18 @@
         .key-ok { background: #32D74B; color: #000; font-weight: bold; }
         .key-ok:active { background: #28a745; }
 
-
-        /* ==================== ВКЛАДКА 2: МОТАЛКИ ==================== */
+        /* ==================== ВКЛАДКА 2 ==================== */
         #tab-coilers { padding: 60px 20px 20px 20px; }
         .page-title { font-size: 34px; font-weight: bold; margin-bottom: 30px; margin-left: 10px; }
 
         .setting-row { background: #1C1C1E; border-radius: 20px; padding: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .setting-label { font-size: 24px; font-weight: 600; }
 
-        /* Контрол Высечек */
         .stepper { display: flex; align-items: center; background: #000; border-radius: 15px; padding: 5px; }
         .step-btn { background: #333; border: none; color: #fff; font-size: 30px; font-weight: bold; width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .step-btn:active { background: #555; transform: scale(0.9); }
         .step-val { width: 60px; text-align: center; font-size: 26px; font-weight: bold; color: #007AFF; }
 
-        /* Тумблер Утолщенный */
         .toggle-switch { width: 70px; height: 40px; background: #333; border-radius: 20px; position: relative; cursor: pointer; transition: background 0.3s; }
         .toggle-switch .knob { width: 34px; height: 34px; background: #fff; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: left 0.3s, transform 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
         .toggle-switch.on { background: #32D74B; }
@@ -101,19 +99,14 @@
 </head>
 <body>
 
-    <!-- Кнопка Гамбургер -->
     <div id="menu-btn" onclick="toggleMenu()">☰</div>
-
-    <!-- Затемнение фона -->
     <div id="overlay" onclick="toggleMenu()"></div>
 
-    <!-- Боковое меню -->
     <div id="side-menu">
         <div class="menu-item active" id="nav-main" onclick="switchTab('main')">Главная (Счетчик)</div>
         <div class="menu-item" id="nav-coilers" onclick="switchTab('coilers')">Моталки (Свойства)</div>
     </div>
 
-    <!-- ВКЛАДКА 1: ГЛАВНАЯ -->
     <div id="tab-main" class="tab-view active">
         <div id="top-zone">
             <div id="roll-btn" class="r1">
@@ -121,7 +114,6 @@
                 <div id="roll-lbl" style="font-size:16px; font-weight:bold; color: rgba(255,255,255,0.8);">РУЛОН</div>
             </div>
         </div>
-
         <div id="bot-zone">
             <div id="history"></div>
             <div id="display">_</div>
@@ -142,10 +134,8 @@
         </div>
     </div>
 
-    <!-- ВКЛАДКА 2: МОТАЛКИ -->
     <div id="tab-coilers" class="tab-view">
         <div class="page-title">Моталки</div>
-        
         <div class="setting-row">
             <div class="setting-label">Высечки</div>
             <div class="stepper">
@@ -154,7 +144,6 @@
                 <button class="step-btn" onclick="changeCut(5)">+</button>
             </div>
         </div>
-
         <div class="setting-row" onclick="toggleThick()">
             <div class="setting-label">Утолщенный</div>
             <div class="toggle-switch" id="thick-toggle">
@@ -164,7 +153,6 @@
     </div>
 
     <script>
-        // ================= УПРАВЛЕНИЕ МЕНЮ =================
         var menuOpen = false;
         function toggleMenu() {
             var menu = document.getElementById('side-menu');
@@ -181,29 +169,21 @@
         }
 
         function switchTab(tabName) {
-            // Прячем все вкладки
             document.getElementById('tab-main').classList.remove('active');
             document.getElementById('tab-coilers').classList.remove('active');
-            // Сбрасываем стили навигации
             document.getElementById('nav-main').classList.remove('active');
             document.getElementById('nav-coilers').classList.remove('active');
-
-            // Показываем нужную
+            
             document.getElementById('tab-' + tabName).classList.add('active');
             document.getElementById('nav-' + tabName).classList.add('active');
-            
-            toggleMenu(); // Закрываем меню
+            toggleMenu(); 
         }
 
-
-        // ================= ДАННЫЕ И ПАМЯТЬ =================
         var cRoll = 1;
         var hist = [];
         var inp = "";
-        
-        var vCut = 5; // Высечки (метраж)
-        var vThick = false; // Утолщенный (галочка)
-
+        var vCut = 5; 
+        var vThick = false; 
         var pressTimer;
         var isLongPress = false;
 
@@ -228,16 +208,11 @@
         }
         loadAll(); 
 
-
-        // ================= РЕНДЕР МОТАЛОК =================
         function renderCoilers() {
             document.getElementById('cut-val').innerText = vCut;
             var tgl = document.getElementById('thick-toggle');
-            if(vThick) {
-                tgl.classList.add('on');
-            } else {
-                tgl.classList.remove('on');
-            }
+            if(vThick) tgl.classList.add('on');
+            else tgl.classList.remove('on');
         }
 
         window.changeCut = function(delta) {
@@ -257,13 +232,10 @@
             renderCoilers();
         }
 
-
-        // ================= РЕНДЕР ГЛАВНОЙ =================
         function renderMain() {
             document.getElementById('roll-num').innerText = cRoll;
             document.getElementById('roll-lbl').innerText = cRoll === 4 ? "ИНСПЕКЦИЯ" : "РУЛОН";
             document.getElementById('roll-btn').className = "r" + cRoll;
-
             document.getElementById('display').innerText = inp === "" ? "_" : inp;
 
             var hDiv = document.getElementById('history');
@@ -297,7 +269,6 @@
             renderMain();
         };
 
-        // ================= ЛОГИКА РУЛОНОВ =================
         var btn = document.getElementById('roll-btn');
         
         function startPress(e) {
@@ -329,14 +300,11 @@
         btn.addEventListener('mouseleave', function() { clearTimeout(pressTimer); });
         btn.addEventListener('touchcancel', function() { clearTimeout(pressTimer); });
 
-
-        // ================= БЛОКИРОВКА ЭКРАНА =================
         async function wake() {
             try { if(navigator.wakeLock) await navigator.wakeLock.request('screen'); } catch(e) {}
         }
         document.addEventListener('visibilitychange', wake);
 
-        // Инициализация при старте
         renderMain();
         renderCoilers();
         wake();
