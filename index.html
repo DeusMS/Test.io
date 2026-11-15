@@ -1,221 +1,334 @@
-Семен, [13.01.2026 19:38]
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Карьера в IT: Возможности и Вызовы</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Тандем-Пост</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000000">
+
+    <style>
+        /* Системный шрифт Apple SF Pro */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; }
+        
+        body { 
+            background-color: #000000; 
+            color: #FFFFFF; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh;
+            height: 100dvh; 
+            overflow: hidden; 
+            user-select: none; 
+            -webkit-user-select: none; 
+            -webkit-tap-highlight-color: transparent;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        /* === ВЕРХНЯЯ ЗОНА (iOS 18 Control Center Widget) === */
+        #top-container {
+            flex: 3.5;
+            padding: 16px 20px;
+            display: flex;
+            align-items: stretch;
+        }
+
+        #roll-zone { 
+            flex: 1;
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            border-radius: 40px; /* Идеальный Apple Squircle */
+            transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+            position: relative;
+        }
+        
+        /* Анимация сжатия при удержании (как в iOS 18) */
+        #roll-zone.pressing { transform: scale(0.92); }
+        
+        #roll-number { 
+            font-size: 130px; 
+            font-weight: 600; 
+            letter-spacing: -4px;
+            pointer-events: none; 
+            color: #FFFFFF;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        #roll-label { 
+            font-size: 16px; 
+            font-weight: 600;
+            color: rgba(255,255,255,0.8); 
+            pointer-events: none;
+            margin-top: -10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        /* Яркие сочные темы iOS 18 с неоновым свечением (Glow) */
+        .theme-1 { 
+            background: linear-gradient(135deg, #007AFF, #0050B3); 
+            box-shadow: 0 10px 40px -10px rgba(0, 122, 255, 0.6); 
+        }
+        .theme-2 { 
+            background: linear-gradient(135deg, #BF5AF2, #782FCD); 
+            box-shadow: 0 10px 40px -10px rgba(191, 90, 242, 0.6); 
+        }
+        .theme-3 { 
+            background: linear-gradient(135deg, #FF9F0A, #CC7300); 
+            box-shadow: 0 10px 40px -10px rgba(255, 159, 10, 0.6); 
+        }
+        .theme-4 { 
+            background: linear-gradient(135deg, #FF453A, #B31009); 
+            box-shadow: 0 10px 50px -5px rgba(255, 69, 58, 0.8); 
+        }
+
+        /* Пульсация для 4 рулона */
+        .pulse-alert { animation: pulseBg 1s infinite alternate; }
+        @keyframes pulseBg {
+            0% { transform: scale(1); filter: brightness(1); }
+            100% { transform: scale(0.97); filter: brightness(1.2); }
+        }
+
+        /* === НИЖНЯЯ ЗОНА === */
+        #bottom-zone { 
+            flex: 6.5; 
+            display: flex; 
+            flex-direction: column; 
+            padding: 0 24px 20px 24px;
+        }
+        
+        /* Лента памяти (Стекло / Glassmorphism) */
+        #history-list { 
+            flex: 1; 
+            overflow-y: auto; 
+            margin-bottom: 20px; 
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .history-item { 
+            background: rgba(255, 255, 255, 0.1); /* Полупрозрачность */
+            backdrop-filter: blur(20px); /* Матовое стекло */
+            -webkit-backdrop-filter: blur(20px);
+            padding: 16px 20px; 
+            border-radius: 24px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .history-value {
+            font-size: 24px;
+            font-weight: 500;
+            color: #FFFFFF;
+        }
+        
+        .delete-btn { 
+            background: rgba(255, 69, 58, 0.2); 
+            color: #FF453A; 
+            border: none; 
+            width: 44px;
+            height: 44px;
+            border-radius: 22px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer; 
+            transition: background 0.2s, transform 0.2s;
+        }
+        .delete-btn:active { background: rgba(255, 69, 58, 0.4); transform: scale(0.9); }
+        
+        /* Дисплей ввода */
+        #display { 
+            font-size: 56px; 
+            font-weight: 300; 
+            text-align: right; 
+            margin-bottom: 20px; 
+            color: #FFFFFF; 
+            min-height: 66px; 
+        }
+        
+        /* Клавиатура (Идеальные круги как в Калькуляторе Apple) */
+        #numpad { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 16px; 
+            justify-items: center; /* Центрируем круги */
+        }
+        
+        .key { 
+            background: #333333; 
+            border: none; 
+            width: 100%;
+            aspect-ratio: 1 / 1; /* Делает кнопку идеальным квадратом, а с border-radius — кругом */
+            max-width: 85px; /* Ограничитель размера для больших экранов */
+            border-radius: 50%; 
+            color: #FFFFFF; 
+            font-size: 36px; 
+            font-weight: 400; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer; 
+            transition: filter 0.1s, transform 0.1s;
+        }
+        
+        .key:active { filter: brightness(1.6); transform: scale(0.9); } /* Подсветка при тапе */
+        
+        .key.cmd-c { 
+            color: #FF453A; 
+            font-weight: 500;
+            background: rgba(255, 69, 58, 0.15);
+        }
+        
+        .key.cmd-ok { 
+            background: #32D74B; 
+            color: #000000;
+            font-weight: 600;
+            box-shadow: 0 0 20px rgba(50, 215, 75, 0.3);
+        }
+        .key.cmd-ok:active { filter: brightness(1.2); }
+
+    </style>
 </head>
 <body>
-    <!-- Навигация -->
-    <nav class="navbar">
-        <div class="container">
-            <a href="#" class="logo">IT Карьера</a>
-            <ul class="nav-menu">
-                <li><a href="#home">Главная</a></li>
-                <li><a href="#opportunities">Возможности</a></li>
-                <li><a href="#challenges">Вызовы</a></li>
-                <li><a href="#paths">Пути развития</a></li>
-                <li><a href="#resources">Ресурсы</a></li>
-            </ul>
-            <button class="menu-toggle">
-                <i class="fas fa-bars"></i>
-            </button>
+
+    <div id="top-container">
+        <div id="roll-zone" class="theme-1">
+            <div id="roll-number">1</div>
+            <div id="roll-label">РУЛОН</div>
         </div>
-    </nav>
+    </div>
 
-    <!-- Герой-секция -->
-    <section id="home" class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <h1>Карьера в <span class="highlight">IT</span>: Возможности и Вызовы</h1>
-
-            </div>
-            <div class="hero-image">
-
-            </div>
+    <div id="bottom-zone">
+        <div id="history-list"></div>
+        <div id="display">_</div>
+        <div id="numpad">
+            <button class="key">1</button><button class="key">2</button><button class="key">3</button>
+            <button class="key">4</button><button class="key">5</button><button class="key">6</button>
+            <button class="key">7</button><button class="key">8</button><button class="key">9</button>
+            <button class="key cmd-c">C</button><button class="key">0</button><button class="key cmd-ok">OK</button>
         </div>
-    </section>
+    </div>
 
-    <!-- Возможности -->
-    <section id="opportunities" class="section opportunities">
-        <div class="container">
-            <h2 class="section-title">Возможности в IT</h2>
-            <p class="section-subtitle">Сфера IT предлагает разнообразные пути для профессионального роста</p>
+    <script>
+        let currentRoll = parseInt(localStorage.getItem('roll')) || 1;
+        let metersHistory = JSON.parse(localStorage.getItem('meters')) || [];
+        let currentInput = "";
+        let wakeLock = null;
+
+        const rollZone = document.getElementById('roll-zone');
+        const rollNumEl = document.getElementById('roll-number');
+        const rollLabelEl = document.getElementById('roll-label');
+        const displayEl = document.getElementById('display');
+        const historyEl = document.getElementById('history-list');
+
+        const trashIcon = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>`;
+
+        async function requestWakeLock() {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                } catch (err) {}
+            }
+        }
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') requestWakeLock();
+        });
+
+        function updateRollUI() {
+            rollNumEl.innerText = currentRoll;
+            rollZone.className = '';
+            rollZone.classList.add(`theme-${currentRoll}`);
             
-            <div class="opportunities-grid">
-                <div class="opportunity-card">
-                    <div class="opportunity-icon">
-                        <i class="fas fa-laptop-code"></i>
-                    </div>
-                    <h3>Высокие зарплаты</h3>
-                    <p>IT-специалисты входят в число самых высокооплачиваемых профессионалов на рынке труда.</p>
-                </div>
-                
-                <div class="opportunity-card">
-                    <div class="opportunity-icon">
-                        <i class="fas fa-globe"></i>
-                    </div>
-                    <h3>Работа из любой точки мира</h3>
-                    <p>Возможность удаленной работы и сотрудничества с международными компаниями.</p>
-                </div>
-                
-                <div class="opportunity-card">
-                    <div class="opportunity-icon">
-                        <i class="fas fa-rocket"></i>
-                    </div>
-                    <h3>Быстрый карьерный рост</h3>
-                    <p>В IT можно быстро расти от джуниора до сеньора и руководителя направления.</p>
-                </div>
-                
-                <div class="opportunity-card">
-                    <div class="opportunity-icon">
-                        <i class="fas fa-lightbulb"></i>
-                    </div>
-                    <h3>Постоянное развитие</h3>
-                    <p>Индустрия постоянно меняется, предоставляя возможности для непрерывного обучения.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+            if (currentRoll === 4) {
+                rollLabelEl.innerText = "ИНСПЕКЦИЯ";
+                rollZone.classList.add('pulse-alert');
+            } else {
+                rollLabelEl.innerText = "РУЛОН";
+            }
+            localStorage.setItem('roll', currentRoll);
+        }
 
-    <!-- Вызовы -->
-    <section id="challenges" class="section challenges">
+        function renderHistory() {
+            historyEl.innerHTML = '';
+            metersHistory.forEach((val, index) => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <span class="history-value">${val} м</span>
+                    <button class="delete-btn" onclick="deleteItem(${index})">${trashIcon}</button>
+                `;
+                historyEl.appendChild(item);
+            });
+            historyEl.scrollTop = historyEl.scrollHeight;
+            localStorage.setItem('meters', JSON.stringify(metersHistory));
+        }
 
+        window.deleteItem = function(index) {
+            metersHistory.splice(index, 1);
+            renderHistory();
+        };
 
-<div class="container">
-            <h2 class="section-title">Вызовы в IT</h2>
-            <p class="section-subtitle">С какими трудностями можно столкнуться в IT-карьере</p>
+        let pressTimer;
+        let isLongPress = false;
+
+        // Добавили анимацию сжатия (pressing) как в виджетах iOS
+        rollZone.addEventListener('touchstart', (e) => {
+            e.preventDefault(); 
+            requestWakeLock();
+            isLongPress = false;
+            rollZone.classList.add('pressing'); 
             
-            <div class="challenges-content">
-                <div class="challenges-image">
-                    <!--<img src="https://images.unsplash.com/photo-1555949963-aa79dcee981c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Вызовы в IT"> -->
-                </div>
-                
-                <div class="challenges-list">
-                    <div class="challenge-item">
-                        <h3><i class="fas fa-sync-alt"></i> Непрерывное обучение</h3>
-                        <p>Технологии быстро устаревают, поэтому необходимо постоянно осваивать новые инструменты и подходы.</p>
-                    </div>
-                    
-                    <div class="challenge-item">
-                        <h3><i class="fas fa-burn"></i> Высокий уровень стресса</h3>
-                        <p>Жесткие дедлайны, работа в режиме многозадачности и необходимость быстро решать сложные задачи.</p>
-                    </div>
-                    
-                    <div class="challenge-item">
-                        <h3><i class="fas fa-balance-scale"></i> Баланс работы и жизни</h3>
-                        <p>Сложности в поддержании здорового баланса между работой и личной жизнью, особенно при удаленной работе.</p>
-                    </div>
-                    
-                    <div class="challenge-item">
-                        <h3><i class="fas fa-users"></i> Конкуренция</h3>
-                        <p>Высокая конкуренция на рынке труда, особенно среди начинающих специалистов.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+            pressTimer = setTimeout(() => {
+                isLongPress = true;
+                currentRoll = 1;
+                updateRollUI();
+                rollZone.classList.remove('pressing');
+            }, 1000); // 1 секунда для сброса
+        }, { passive: false });
 
-    <!-- Пути развития -->
-    <section id="paths" class="section paths">
-        <div class="container">
-            <h2 class="section-title">Пути развития в IT</h2>
-            <p class="section-subtitle">Основные направления для построения карьеры в информационных технологиях</p>
+        rollZone.addEventListener('touchend', (e) => {
+            clearTimeout(pressTimer);
+            rollZone.classList.remove('pressing');
             
-            <div class="paths-timeline">
-                <div class="path-step">
-                    <div class="step-number">1</div>
-                    <div class="step-content">
-                        <h3>Веб-разработка</h3>
-                        <p>Frontend, Backend или Fullstack разработка. Создание сайтов и веб-приложений.</p>
-                        <ul class="path-skills">
-                            <li>HTML/CSS/JavaScript</li>
-                            <li>React/Vue/Angular</li>
-                            <li>Node.js/Python/PHP</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="path-step">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                        <h3>Мобильная разработка</h3>
-                        <p>Создание приложений для iOS и Android или кроссплатформенных решений.</p>
-                        <ul class="path-skills">
-                            <li>Swift/Kotlin</li>
-                            <li>React Native/Flutter</li>
-                            <li>UI/UX для мобильных</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="path-step">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                        <h3>Data Science и AI</h3>
-                        <p>Работа с большими данными, машинное обучение и искусственный интеллект.</p>
-                        <ul class="path-skills">
-                            <li>Python/R</li>
-                            <li>Машинное обучение</li>
+            if (!isLongPress) {
+                currentRoll = currentRoll < 4 ? currentRoll + 1 : 1;
+                updateRollUI();
+            }
+        });
 
+        document.querySelectorAll('.key').forEach(btn => {
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                requestWakeLock();
+                const val = e.target.innerText;
+                if (val === 'C') {
+                    currentInput = "";
+                } else if (val === 'OK') {
+                    if (currentInput !== "") {
+                        metersHistory.push(currentInput); 
+                        currentInput = "";
+                        renderHistory();
+                    }
+                } else {
+                    if (currentInput.length < 5) currentInput += val;
+                }
+                displayEl.innerText = currentInput === "" ? "_" : currentInput;
+            }, { passive: false });
+        });
 
-<li>SQL и базы данных</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="path-step">
-                    <div class="step-number">4</div>
-                    <div class="step-content">
-                        <h3>Кибербезопасность</h3>
-                        <p>Защита информационных систем от кибератак и обеспечение безопасности данных.</p>
-                        <ul class="path-skills">
-                            <li>Сетевые протоколы</li>
-                            <li>Пентестинг</li>
-                            <li>Криптография</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Ресурсы -->
-    <section id="resources" class="section resources">
-        <div class="container">
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Футер -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-info">
-                    <h3>IT Карьера: Возможности и Вызовы</h3>
-
-                </div>
-                
-                <div class="footer-links">
-
-</ul>
-                </div>
-                
-                <div class="footer-contact">
-
-                    </div>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <script src="did.js"></script>
+        updateRollUI();
+        renderHistory();
+        requestWakeLock();
+    </script>
 </body>
-
 </html>
