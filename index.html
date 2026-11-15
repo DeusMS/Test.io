@@ -10,137 +10,196 @@
     <meta name="theme-color" content="#000000">
 
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; }
-        
+        /* Бронированная верстка — не схлопнется ни на одном айфоне */
         body { 
-            background-color: #000000; 
-            color: #FFFFFF; 
-            display: flex; 
-            flex-direction: column; 
-            height: 100vh;
-            height: 100dvh; 
-            overflow: hidden; 
-            user-select: none; 
-            -webkit-user-select: none; 
-            -webkit-tap-highlight-color: transparent;
+            margin: 0; padding: 0; 
+            background: #000; color: #fff; 
+            font-family: -apple-system, sans-serif; 
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+            display: flex; flex-direction: column; 
+            user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
         }
         
-        /* === ВЕРХНЯЯ ЗОНА === */
-        #top-container {
-            height: 35vh; 
-            min-height: 250px;
-            padding: 16px 20px;
-            display: flex;
-            align-items: stretch;
-            flex-shrink: 0; 
+        #top-zone { flex: 0 0 35%; display: flex; padding: 20px; box-sizing: border-box; }
+        
+        #roll-btn { 
+            flex: 1; border-radius: 40px; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            transition: 0.1s; box-shadow: 0 10px 30px -10px rgba(255,255,255,0.2);
+        }
+        #roll-btn:active { transform: scale(0.95); }
+        
+        .r1 { background: linear-gradient(135deg, #007AFF, #0050B3); }
+        .r2 { background: linear-gradient(135deg, #BF5AF2, #782FCD); }
+        .r3 { background: linear-gradient(135deg, #FF9F0A, #CC7300); }
+        .r4 { background: linear-gradient(135deg, #FF453A, #B31009); box-shadow: 0 0 40px rgba(255, 69, 58, 0.6) !important; }
+        
+        #bot-zone { flex: 1; display: flex; flex-direction: column; padding: 0 20px 20px 20px; box-sizing: border-box; overflow: hidden; }
+        
+        #history { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; -ms-overflow-style: none; scrollbar-width: none; }
+        #history::-webkit-scrollbar { display: none; }
+        
+        .itm { background: #222; padding: 15px 20px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 24px; font-weight: bold; border: 1px solid #333; }
+        .del-btn { background: #4a0000; color: #ff4444; border: none; border-radius: 50%; width: 45px; height: 45px; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .del-btn:active { background: #ff4444; color: #fff; }
+        
+        #display { font-size: 50px; text-align: right; color: #fff; min-height: 60px; margin-bottom: 15px; font-weight: 300; }
+        
+        #keyboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; justify-items: center; }
+        
+        .key { 
+            background: #333; color: #fff; border: none; 
+            width: 100%; aspect-ratio: 1/1; max-width: 80px; border-radius: 50%; 
+            font-size: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; 
+        }
+        .key:active { background: #666; transform: scale(0.9); }
+        
+        .key-c { color: #FF453A; background: #2a0000; font-weight: bold; }
+        .key-ok { background: #32D74B; color: #000; font-weight: bold; }
+        .key-ok:active { background: #28a745; }
+    </style>
+</head>
+<body>
+
+    <div id="top-zone">
+        <div id="roll-btn" class="r1">
+            <div id="roll-num" style="font-size:130px; font-weight:bold; text-shadow: 0 4px 10px rgba(0,0,0,0.3);">1</div>
+            <div id="roll-lbl" style="font-size:18px; font-weight:bold; color: rgba(255,255,255,0.8);">РУЛОН</div>
+        </div>
+    </div>
+
+    <div id="bot-zone">
+        <div id="history"></div>
+        <div id="display">_</div>
+        <div id="keyboard">
+            <!-- Жесткая привязка кнопок (onclick) — работает всегда -->
+            <button class="key" onclick="k('1')">1</button>
+            <button class="key" onclick="k('2')">2</button>
+            <button class="key" onclick="k('3')">3</button>
+            <button class="key" onclick="k('4')">4</button>
+            <button class="key" onclick="k('5')">5</button>
+            <button class="key" onclick="k('6')">6</button>
+            <button class="key" onclick="k('7')">7</button>
+            <button class="key" onclick="k('8')">8</button>
+            <button class="key" onclick="k('9')">9</button>
+            <button class="key key-c" onclick="k('C')">C</button>
+            <button class="key" onclick="k('0')">0</button>
+            <button class="key key-ok" onclick="k('OK')">OK</button>
+        </div>
+    </div>
+
+    <script>
+        // 1. БЕЗОПАСНАЯ ПАМЯТЬ (Никогда не крашнется)
+        var cRoll = 1;
+        var hist = [];
+        var inp = "";
+        var pressTimer;
+        var isLongPress = false;
+
+        function save() {
+            try { 
+                localStorage.setItem('r_val', cRoll); 
+                localStorage.setItem('h_val', JSON.stringify(hist)); 
+            } catch(e) {}
         }
 
-        #roll-zone { 
-            flex: 1;
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
-            border-radius: 40px; 
-            transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+        function load() {
+            try { 
+                cRoll = parseInt(localStorage.getItem('r_val')) || 1; 
+                hist = JSON.parse(localStorage.getItem('h_val')) || []; 
+            } catch(e) { 
+                cRoll = 1; hist = []; localStorage.clear(); 
+            }
         }
-        
-        #roll-zone.pressing { transform: scale(0.92); }
-        
-        #roll-number { 
-            font-size: 130px; 
-            font-weight: 600; 
-            letter-spacing: -4px;
-            pointer-events: none; 
-            color: #FFFFFF;
-            text-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        
-        #roll-label { 
-            font-size: 16px; 
-            font-weight: 600;
-            color: rgba(255,255,255,0.8); 
-            pointer-events: none;
-            margin-top: -10px;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
+        load(); // Грузим данные при старте
+
+        // 2. ОТРИСОВКА ИНТЕРФЕЙСА (Очищает и перерисовывает всё с нуля)
+        function render() {
+            // Рулон
+            document.getElementById('roll-num').innerText = cRoll;
+            document.getElementById('roll-lbl').innerText = cRoll === 4 ? "ИНСПЕКЦИЯ" : "РУЛОН";
+            document.getElementById('roll-btn').className = "r" + cRoll;
+
+            // Дисплей
+            document.getElementById('display').innerText = inp === "" ? "_" : inp;
+
+            // Лента метров
+            var hDiv = document.getElementById('history');
+            hDiv.innerHTML = "";
+            for(var i = 0; i < hist.length; i++) {
+                hDiv.innerHTML += "<div class='itm'><span>" + hist[i] + " м</span><button class='del-btn' onclick='del(" + i + ")'>✖</button></div>";
+            }
+            hDiv.scrollTop = hDiv.scrollHeight; // Автоскролл
         }
 
-        .theme-1 { background: linear-gradient(135deg, #007AFF, #0050B3); box-shadow: 0 10px 40px -10px rgba(0, 122, 255, 0.6); }
-        .theme-2 { background: linear-gradient(135deg, #BF5AF2, #782FCD); box-shadow: 0 10px 40px -10px rgba(191, 90, 242, 0.6); }
-        .theme-3 { background: linear-gradient(135deg, #FF9F0A, #CC7300); box-shadow: 0 10px 40px -10px rgba(255, 159, 10, 0.6); }
-        .theme-4 { background: linear-gradient(135deg, #FF453A, #B31009); box-shadow: 0 10px 50px -5px rgba(255, 69, 58, 0.8); }
+        // 3. УДАЛЕНИЕ ЗАПИСИ
+        window.del = function(index) {
+            hist.splice(index, 1);
+            save();
+            render();
+            wake();
+        };
 
-        .pulse-alert { animation: pulseBg 1s infinite alternate; }
-        @keyframes pulseBg {
-            0% { transform: scale(1); filter: brightness(1); }
-            100% { transform: scale(0.97); filter: brightness(1.2); }
+        // 4. КЛАВИАТУРА
+        window.k = function(val) {
+            wake();
+            if(val === 'C') {
+                inp = "";
+            } else if(val === 'OK') {
+                if(inp !== "") {
+                    hist.push(inp);
+                    inp = "";
+                    save();
+                }
+            } else {
+                if(inp.length < 5) inp += val;
+            }
+            render();
+        };
+
+        // 5. ЛОГИКА РУЛОНОВ (Долгое нажатие = сброс, Быстрое = +1)
+        var btn = document.getElementById('roll-btn');
+        
+        function startPress(e) {
+            if(e.type === 'touchstart') e.preventDefault();
+            wake();
+            isLongPress = false;
+            pressTimer = setTimeout(function() {
+                isLongPress = true;
+                cRoll = 1; // Сброс
+                save();
+                render();
+            }, 1000);
         }
 
-        /* === НИЖНЯЯ ЗОНА === */
-        #bottom-zone { 
-            flex: 1 1 0%; /* Исправлено для Apple Safari, чтобы блок не схлопывался */
-            display: flex; 
-            flex-direction: column; 
-            padding: 0 24px 20px 24px;
-            overflow: hidden; 
+        function endPress(e) {
+            if(e.type === 'touchend') e.preventDefault();
+            clearTimeout(pressTimer);
+            if(!isLongPress) {
+                cRoll = cRoll < 4 ? cRoll + 1 : 1; // Плюс 1
+                save();
+                render();
+            }
         }
-        
-        /* Лента памяти */
-        #history-list { 
-            flex: 1 1 0%; 
-            overflow-y: auto; 
-            margin-bottom: 12px; 
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            
-            /* Скрываем ползунок скролла */
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+
+        btn.addEventListener('mousedown', startPress);
+        btn.addEventListener('touchstart', startPress, {passive: false});
+        btn.addEventListener('mouseup', endPress);
+        btn.addEventListener('touchend', endPress, {passive: false});
+        btn.addEventListener('mouseleave', function() { clearTimeout(pressTimer); });
+        btn.addEventListener('touchcancel', function() { clearTimeout(pressTimer); });
+
+        // 6. БЛОКИРОВКА ЭКРАНА
+        async function wake() {
+            try { if(navigator.wakeLock) await navigator.wakeLock.request('screen'); } catch(e) {}
         }
-        #history-list::-webkit-scrollbar { display: none; }
-        
-        .history-item { 
-            background: rgba(255, 255, 255, 0.1); 
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px);
-            padding: 16px 20px; 
-            border-radius: 24px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            flex-shrink: 0; 
-        }
-        
-        .history-value { font-size: 24px; font-weight: 500; color: #FFFFFF; }
-        
-        .delete-btn { 
-            background: rgba(255, 69, 58, 0.2); 
-            color: #FF453A; 
-            border: none; 
-            width: 44px; height: 44px; border-radius: 22px; 
-            display: flex; justify-content: center; align-items: center;
-            cursor: pointer; transition: background 0.2s, transform 0.2s;
-        }
-        .delete-btn:active { background: rgba(255, 69, 58, 0.4); transform: scale(0.9); }
-        
-        /* Дисплей ввода */
-        #display { 
-            font-size: 56px; 
-            font-weight: 300; 
-            text-align: right; 
-            margin-bottom: 16px; 
-            color: #FFFFFF; 
-            min-height: 66px; 
-            flex-shrink: 0; 
-        }
-        
-        /* Клавиатура */
-        #numpad { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 1
+        document.addEventListener('visibilitychange', wake);
+
+        // Первый запуск отрисовки
+        render();
+        wake();
+    </script>
+</body>
+</html>
