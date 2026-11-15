@@ -241,8 +241,8 @@
                 `;
                 historyEl.appendChild(item);
             });
-            // Плавный скролл вниз при добавлении
-            historyEl.scrollTo({ top: historyEl.scrollHeight, behavior: 'smooth' });
+            // Автоскролл вниз к новым значениям
+            historyEl.scrollTop = historyEl.scrollHeight;
             localStorage.setItem('meters', JSON.stringify(metersHistory));
         }
 
@@ -251,11 +251,12 @@
             renderHistory();
         };
 
+        // Универсальная логика для Зоны Рулонов (работает и от мыши, и от пальца)
         let pressTimer;
         let isLongPress = false;
 
-        rollZone.addEventListener('touchstart', (e) => {
-            e.preventDefault(); 
+        function handlePressStart(e) {
+            if (e.type === 'touchstart') e.preventDefault(); 
             requestWakeLock();
             isLongPress = false;
             rollZone.classList.add('pressing'); 
@@ -266,9 +267,10 @@
                 updateRollUI();
                 rollZone.classList.remove('pressing');
             }, 1000); 
-        }, { passive: false });
+        }
 
-        rollZone.addEventListener('touchend', (e) => {
+        function handlePressEnd(e) {
+            if (e.type === 'touchend') e.preventDefault();
             clearTimeout(pressTimer);
             rollZone.classList.remove('pressing');
             
@@ -276,13 +278,27 @@
                 currentRoll = currentRoll < 4 ? currentRoll + 1 : 1;
                 updateRollUI();
             }
-        });
+        }
 
+        function handlePressCancel() {
+            clearTimeout(pressTimer);
+            rollZone.classList.remove('pressing');
+        }
+
+        // Привязываем и мышь, и тачи
+        rollZone.addEventListener('mousedown', handlePressStart);
+        rollZone.addEventListener('touchstart', handlePressStart, { passive: false });
+        rollZone.addEventListener('mouseup', handlePressEnd);
+        rollZone.addEventListener('touchend', handlePressEnd, { passive: false });
+        rollZone.addEventListener('mouseleave', handlePressCancel);
+        rollZone.addEventListener('touchcancel', handlePressCancel);
+
+        // Логика клавиатуры (используем click, так как touch-action: manipulation в CSS убирает задержку)
         document.querySelectorAll('.key').forEach(btn => {
-            btn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
+            btn.addEventListener('click', (e) => {
                 requestWakeLock();
-                const val = e.target.innerText;
+                const val = e.currentTarget.innerText.trim();
+                
                 if (val === 'C') {
                     currentInput = "";
                 } else if (val === 'OK') {
@@ -295,9 +311,10 @@
                     if (currentInput.length < 5) currentInput += val;
                 }
                 displayEl.innerText = currentInput === "" ? "_" : currentInput;
-            }, { passive: false });
+            });
         });
 
+        // Запуск
         updateRollUI();
         renderHistory();
         requestWakeLock();
