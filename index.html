@@ -12,29 +12,31 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; }
         
-        body { 
+        /* Исправление высоты и черной полоски для iOS */
+        html, body {
             background-color: #000000; 
+            height: 100vh;
+            height: -webkit-fill-available;
+        }
+        
+        body { 
             color: #FFFFFF; 
             display: flex; 
             flex-direction: column; 
-            height: 100vh;
-            height: 100dvh; 
             overflow: hidden; 
             user-select: none; 
             -webkit-user-select: none; 
             -webkit-tap-highlight-color: transparent;
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
         }
         
         /* === ВЕРХНЯЯ ЗОНА === */
         #top-container {
-            height: 35vh; /* Фиксированная высота виджета вместо flex */
+            height: 35vh; 
             min-height: 250px;
-            padding: 16px 20px;
+            padding: calc(16px + env(safe-area-inset-top)) 20px 16px 20px;
             display: flex;
             align-items: stretch;
-            flex-shrink: 0; /* Запрещаем сжиматься */
+            flex-shrink: 0; 
         }
 
         #roll-zone { 
@@ -81,23 +83,21 @@
 
         /* === НИЖНЯЯ ЗОНА === */
         #bottom-zone { 
-            flex: 1; /* Занимает всё оставшееся пространство */
+            flex: 1; 
             display: flex; 
             flex-direction: column; 
-            padding: 0 24px 20px 24px;
-            overflow: hidden; /* Запрещаем расширение наружу */
+            /* Вшиваем зону Home Indicator прямо в отступ клавиатуры */
+            padding: 0 24px calc(20px + env(safe-area-inset-bottom)) 24px;
+            overflow: hidden; 
         }
         
-        /* Лента памяти */
         #history-list { 
-            flex: 1; /* Растягивается, но ограничена снизу клавиатурой */
+            flex: 1; 
             overflow-y: auto; 
             margin-bottom: 12px; 
             display: flex;
             flex-direction: column;
             gap: 12px;
-            
-            /* Прячем ползунок скролла для красоты iOS */
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
@@ -113,7 +113,7 @@
             justify-content: space-between; 
             align-items: center; 
             border: 1px solid rgba(255, 255, 255, 0.05);
-            flex-shrink: 0; /* Не даем карточкам сплющиваться */
+            flex-shrink: 0; 
         }
         
         .history-value { font-size: 24px; font-weight: 500; color: #FFFFFF; }
@@ -128,7 +128,6 @@
         }
         .delete-btn:active { background: rgba(255, 69, 58, 0.4); transform: scale(0.9); }
         
-        /* Дисплей ввода */
         #display { 
             font-size: 56px; 
             font-weight: 300; 
@@ -136,17 +135,15 @@
             margin-bottom: 16px; 
             color: #FFFFFF; 
             min-height: 66px; 
-            flex-shrink: 0; /* Защита от сплющивания */
+            flex-shrink: 0; 
         }
         
-        /* Клавиатура */
         #numpad { 
             display: grid; 
             grid-template-columns: repeat(3, 1fr); 
-            gap: 12px; /* Чуть уменьшил отступы */
+            gap: 12px; 
             justify-items: center; 
-            flex-shrink: 0; /* ГАРАНТИЯ, ЧТО КЛАВИАТУРА НЕ СОЖМЕТСЯ */
-            margin-bottom: 5px; /* Защита от домашней полоски iOS */
+            flex-shrink: 0; 
         }
         
         .key { 
@@ -154,7 +151,7 @@
             border: none; 
             width: 100%;
             aspect-ratio: 1 / 1; 
-            max-width: 80px; /* Чуть компактнее */
+            max-width: 80px; 
             border-radius: 50%; 
             color: #FFFFFF; 
             font-size: 34px; 
@@ -241,8 +238,7 @@
                 `;
                 historyEl.appendChild(item);
             });
-            // Автоскролл вниз к новым значениям
-            historyEl.scrollTop = historyEl.scrollHeight;
+            historyEl.scrollTo({ top: historyEl.scrollHeight, behavior: 'smooth' });
             localStorage.setItem('meters', JSON.stringify(metersHistory));
         }
 
@@ -251,7 +247,7 @@
             renderHistory();
         };
 
-        // Универсальная логика для Зоны Рулонов (работает и от мыши, и от пальца)
+        // Обработчик счетчика рулонов
         let pressTimer;
         let isLongPress = false;
 
@@ -285,7 +281,6 @@
             rollZone.classList.remove('pressing');
         }
 
-        // Привязываем и мышь, и тачи
         rollZone.addEventListener('mousedown', handlePressStart);
         rollZone.addEventListener('touchstart', handlePressStart, { passive: false });
         rollZone.addEventListener('mouseup', handlePressEnd);
@@ -293,24 +288,34 @@
         rollZone.addEventListener('mouseleave', handlePressCancel);
         rollZone.addEventListener('touchcancel', handlePressCancel);
 
-        // Логика клавиатуры (используем click, так как touch-action: manipulation в CSS убирает задержку)
-        document.querySelectorAll('.key').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                requestWakeLock();
-                const val = e.currentTarget.innerText.trim();
-                
-                if (val === 'C') {
+        // Универсальный и надежный обработчик клавиатуры
+        function handleNumpadPress(val) {
+            requestWakeLock();
+            if (val === 'C') {
+                currentInput = "";
+            } else if (val === 'OK') {
+                if (currentInput !== "") {
+                    metersHistory.push(currentInput); 
                     currentInput = "";
-                } else if (val === 'OK') {
-                    if (currentInput !== "") {
-                        metersHistory.push(currentInput); 
-                        currentInput = "";
-                        renderHistory();
-                    }
-                } else {
-                    if (currentInput.length < 5) currentInput += val;
+                    renderHistory();
                 }
-                displayEl.innerText = currentInput === "" ? "_" : currentInput;
+            } else {
+                if (currentInput.length < 5) currentInput += val;
+            }
+            displayEl.innerText = currentInput === "" ? "_" : currentInput;
+        }
+
+        document.querySelectorAll('.key').forEach(btn => {
+            // Для мгновенного срабатывания на iPhone
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault(); 
+                handleNumpadPress(e.currentTarget.textContent.trim());
+            }, { passive: false });
+            
+            // Для работы на ПК
+            btn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                handleNumpadPress(e.currentTarget.textContent.trim());
             });
         });
 
