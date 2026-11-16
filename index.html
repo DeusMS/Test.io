@@ -376,7 +376,7 @@
         // Вкладка Пробеги
         var actStand = 5;
         var mInp = "";
-        var K = { 5: 1.000, 4: 0.970, 3: 0.679, 2: 0.475, 1: 0.295 };
+        var K = { 5: 1.000, 4: 0.980, 3: 0.650, 2: 0.475, 1: 0.27 };
 
         window.actMil = function(stand) { wake(); actStand = stand; mInp = ""; renderMil(); }
         window.kMil = function(val) { wake(); if(val === 'C') { mInp = ""; } else if(val !== 'OK') { if(mInp.length < 6) mInp += val; } renderMil(); }
