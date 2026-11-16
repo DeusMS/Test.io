@@ -94,15 +94,23 @@
         #tab-mileage.active { display: flex; }
         
         #stands-container { 
-            flex: 1; overflow-y: auto; display: flex; flex-direction: column; 
-            gap: 6px; margin-bottom: 10px; -ms-overflow-style: none; scrollbar-width: none;
+            flex: 1; 
+            overflow-y: auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 6px; 
+            margin-bottom: 10px; 
+            -ms-overflow-style: none; scrollbar-width: none;
         }
         #stands-container::-webkit-scrollbar { display: none; }
         
         .stand-row { 
-            background: #1C1C1E; padding: 8px 12px; border-radius: 12px; 
+            background: #1C1C1E; 
+            padding: 8px 12px; 
+            border-radius: 12px; 
             display: flex; justify-content: space-between; align-items: center; 
-            border: 1px solid transparent; flex-shrink: 0;
+            border: 1px solid transparent; 
+            flex-shrink: 0;
         }
         
         .s-name { font-size: 18px; font-weight: bold; color: #aaa; width: 70px; }
@@ -120,7 +128,7 @@
         .stand-row.active .s-name { color: #fff; }
 
         /* ==================== ВКЛАДКА 4: СОБЫТИЯ ==================== */
-        #tab-events { padding: 50px 15px 15px 15px; display: none; flex-direction: column; }
+        #tab-events { padding: 50px 15px 15px 15px; display: none; flex-direction: column; overflow: hidden; }
         #tab-events.active { display: flex; }
 
         .event-btn { 
@@ -133,6 +141,7 @@
         #events-list { 
             flex: 1; overflow-y: auto; display: flex; flex-direction: column; 
             gap: 8px; -ms-overflow-style: none; scrollbar-width: none; padding-top: 5px;
+            overscroll-behavior: contain;
         }
         #events-list::-webkit-scrollbar { display: none; }
         
@@ -271,6 +280,8 @@
             if (now - lastTouchEnd <= 300) { e.preventDefault(); }
             lastTouchEnd = now;
         }, { passive: false });
+        
+        // Разрешаем скролл для истории, пробегов и списка событий
         document.addEventListener('touchmove', function(e) {
             if (!e.target.closest('#history') && !e.target.closest('#stands-container') && !e.target.closest('#events-list')) { e.preventDefault(); }
         }, { passive: false });
@@ -291,27 +302,24 @@
         }
 
         function switchTab(tabName) {
-            // Скрываем все вкладки
             document.getElementById('tab-main').classList.remove('active');
             document.getElementById('tab-coilers').classList.remove('active');
             document.getElementById('tab-mileage').classList.remove('active');
             document.getElementById('tab-events').classList.remove('active');
             
-            // Убираем выделение в меню
             document.getElementById('nav-main').classList.remove('active');
             document.getElementById('nav-coilers').classList.remove('active');
             document.getElementById('nav-mileage').classList.remove('active');
             document.getElementById('nav-events').classList.remove('active');
             
-            // Включаем нужную
             document.getElementById('tab-' + tabName).classList.add('active');
             document.getElementById('nav-' + tabName).classList.add('active');
             toggleMenu(); 
         }
 
-        // Память (добавили eventsLog)
+        // Память
         var cRoll = 1, hist = [], inp = "", vCut = 5, vThick = false, pressTimer, isLongPress = false;
-        var eventsLog = []; // Массив для событий
+        var eventsLog = [];
 
         function saveAll() { 
             try { 
